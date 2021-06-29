@@ -1,4 +1,8 @@
 # tsp-genetic-algorithm
-Ejecutar
+Compilar
 
-gcc -Wall data<num>.c tsp-ge.c -o tsp-ge
+`gcc -g -Wall -fopenmp -o pararllel-thread-tsp-ga pararllel-thread-tsp-ga.c  data15.c`
+
+Run
+
+`./pararllel-thread-tsp-ga <num_of_threads> <num_of_lopp>`

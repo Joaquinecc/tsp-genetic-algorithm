@@ -3,8 +3,8 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
-#include "data29.h"
-
+#include "data15.h"
+#include <omp.h>
 
 // Number of cities 
 // Initial population size for the algorithm
@@ -15,7 +15,6 @@
 
 
 int MAX_LOOP=10;
-
 
 struct individual {
 	char gnome[V+1] ;
@@ -188,17 +187,14 @@ struct individual choose_the_best_ones(struct individual population[POP_SIZE]){
 	return population[0];
 
 }
-int main(int argc, char **argv)	 {
+int tsp()	 {
 
 /* Intializes random number generator */
 	// srand( time( NULL ) );
 
-	// printf("Map\n");
-	// print_map();
 
-	MAX_LOOP=strtol(argv[1],NULL,10);
 
-	printf("N= %d\n",MAX_LOOP);
+ 
 	struct individual population[POP_SIZE];
 
 	// Populating the GNOME pool.
@@ -207,37 +203,23 @@ int main(int argc, char **argv)	 {
 		population[i].fitness = cal_fitness(population[i].gnome);
 	}
 
-	//Print population
-	// printf("Initial Population\n");
-	// print_population(population);
 
+	#pragma omp for 
 	for(int iter=0;iter<MAX_LOOP;iter++){
+		// printf("Iteration %d\n",iter);
 		//Select pair to cross
 		struct individual selected[POP_SIZE];
 		select_individual(population,selected);
-		// printf("Individual Selected\n");
-		// print_population(selected);	
+
 
 		// Cross-over
 		struct individual cross_population[POP_SIZE];
 		cross_over(selected,cross_population);
-		// printf("Individual cross over\n");
-		// print_population(cross_population);		
+
 
 		//Mutate
 		struct individual mutate_population[POP_SIZE];
 		mutate(cross_population,mutate_population);
-		// printf("Individual Mutation\n");
-		// print_population(mutate_population);	
-
-		
-		//Choose best ones
-		// struct individual full_population[POP_SIZE*2];
-		// memcpy(full_population,population, POP_SIZE*sizeof(struct individual));
-		// memcpy(&full_population[POP_SIZE],mutate_population, POP_SIZE*sizeof(struct individual));
-		// choose_best_ones(full_population,population);
-		// printf("Individual Best ones\n");
-		// print_population(population);
 
 		struct individual full_population[POP_SIZE*2];
 		copy_struct_individual(full_population,population);
@@ -246,12 +228,20 @@ int main(int argc, char **argv)	 {
 
 	
 	}
-		printf("Individual Best ones\n");
-		struct individual fav = choose_the_best_ones(population);
-		printf("Individual Winner : %s with fittness : %d\n",fav.gnome,fav.fitness);
+	int my_rank=omp_get_thread_num();
+	// printf("Final result del hilo %d\n",my_rank);
+	struct individual fav = choose_the_best_ones(population);
+	printf("Hilo: %d.Individual Winner : %s with fittness : %d\n",my_rank,fav.gnome,fav.fitness);
 
 	return 0;
 }
+int main(int argc, char **argv){
 
+	int thread_count=strtol(argv[1],NULL,10);	
+	MAX_LOOP=strtol(argv[2],NULL,10);
+	printf("N= %d with p = %d\n",MAX_LOOP,thread_count);
+#	pragma omp parallel num_threads(thread_count)
+	tsp();
+}
 
 
